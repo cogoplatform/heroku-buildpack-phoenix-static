@@ -48,11 +48,13 @@ load_config() {
 }
 
 export_config_vars() {
-  for config_var in ${config_vars_to_export[@]}; do
-    if [ -d $env_dir ] && [ -f $env_dir/${config_var} ]; then
-      export ${config_var}=$(cat $env_dir/${config_var})
-    fi
-  done
+  if [ -d "$env_dir" ]; then
+    for e in $(ls $env_dir); do
+      echo "$e" &&
+      export "$e=$(cat $env_dir/$e)"
+      :
+    done
+  fi
 }
 
 export_mix_env() {
