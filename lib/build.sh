@@ -35,7 +35,7 @@ install_node() {
   mv /tmp/node-v$node_version-linux-x64/* $heroku_dir/node
   chmod +x $heroku_dir/node/bin/*
   PATH=$heroku_dir/node/bin:$PATH
-  PATH=$build_dir/.heroku/yarn/bin:$PATH
+  PATH=$heroku_dir/yarn/bin:$PATH
 }
 
 install_yarn() {
@@ -62,7 +62,7 @@ install_yarn() {
 
 install_and_cache_yarn_deps() {
   info "Installing and caching node modules"
-  cd $phoenix_dir
+  cd $frontend_dir
   if [ -d $cache_dir/node_modules ]; then
     mkdir -p node_modules
     cp -r $cache_dir/node_modules/* node_modules/
@@ -70,7 +70,7 @@ install_and_cache_yarn_deps() {
 
   yarn 2>&1
   cp -r node_modules $cache_dir
-  PATH=$phoenix_dir/node_modules/.bin:$PATH
+  PATH=$frontend_dir/node_modules/.bin:$PATH
   install_bower_deps
 }
 
@@ -94,17 +94,18 @@ compile() {
   cd $phoenix_dir
   PATH=$build_dir/.platform_tools/erlang/bin:$PATH
   PATH=$build_dir/.platform_tools/elixir/bin:$PATH
-  PATH=$build_dir/.heroku/yarn/bin:$PATH
+  PATH=$heroku_dir/yarn/bin:$PATH
 
   run_compile
 }
 
 run_compile() {
-  local custom_compile="${build_dir}/${compile}"
+  local custom_compile="${frontend_dir}/${compile}"
 
   if [ -f $custom_compile ]; then
     info "Running custom compile"
-    source $custom_compile 2>&1 | indent
+    cd $frontend_dir
+    $compile
   else
     info "Running default compile"
     source ${build_pack_dir}/${compile} 2>&1 | indent
@@ -119,7 +120,7 @@ cache_versions() {
 write_profile() {
   info "Creating runtime environment"
   mkdir -p $build_dir/.profile.d
-  local export_line="export PATH=\"\$HOME/.heroku/node/bin:\$HOME/bin:\$HOME/$phoenix_relative_path/node_modules/.bin:\$PATH\"
+  local export_line="export PATH=\"\$HOME/.heroku/node/bin:\$HOME/bin:\$HOME/$frontend_relative_path/node_modules/.bin:\$PATH\"
                      export MIX_ENV=${MIX_ENV}"
   echo $export_line >> $build_dir/.profile.d/phoenix_static_buildpack_paths.sh
 }
