@@ -14,7 +14,6 @@ mkdir -p $heroku_dir/node
 source ${build_pack_dir}/lib/common.sh
 source ${build_pack_dir}/lib/build.sh
 
-old_npm=$(file_contents "$cache_dir/npm-version")
 old_node=$(file_contents "$cache_dir/node-version")
 
 head "Loading configuration and environment"
@@ -27,10 +26,10 @@ cached_node=$cache_dir/node-v$node_version-linux-x64.tar.gz
 head "Installing binaries"
 download_node
 install_node
-install_npm
+install_yarn $heroku_dir/yarn/bin
 
 head "Building dependencies"
-install_and_cache_npm_deps
+install_and_cache_yarn_deps
 
 compile
 

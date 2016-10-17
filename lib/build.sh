@@ -31,24 +31,36 @@ install_node() {
   info "Installing node $node_version..."
   tar xzf ${cached_node} -C /tmp
 
-  # Move node (and npm) into .heroku/node and make them executable
+  # Move node into .heroku/node and make them executable
   mv /tmp/node-v$node_version-linux-x64/* $heroku_dir/node
   chmod +x $heroku_dir/node/bin/*
   PATH=$heroku_dir/node/bin:$PATH
+  PATH=$build_dir/.heroku/yarn/bin:$PATH
 }
 
-install_npm() {
-  # Optionally bootstrap a different npm version
-  if [ ! $npm_version ] || [[ `npm --version` == "$npm_version" ]]; then
-    info "Using default npm version"
-  else
-    info "Downloading and installing npm $npm_version (replacing version `npm --version`)..."
-    cd $build_dir
-    npm install --unsafe-perm --quiet -g npm@$npm_version 2>&1 >/dev/null | indent
+install_yarn() {
+  local dir="$1"
+
+  echo "Downloading and installing yarn..."
+  local download_url="https://yarnpkg.com/latest.tar.gz"
+  local code=$(curl "$download_url" -L --silent --fail --retry 5 --retry-max-time 15 -o /tmp/yarn.tar.gz --write-out "%{http_code}")
+  if [ "$code" != "200" ]; then
+    echo "Unable to download yarn: $code" && false
   fi
+  rm -rf $dir
+  mkdir -p "$dir"
+
+  # https://github.com/yarnpkg/yarn/issues/770
+  if tar --version | grep -q 'gnu'; then
+    tar xzf /tmp/yarn.tar.gz -C "$dir" --strip 1 --warning=no-unknown-keyword
+  else
+    tar xzf /tmp/yarn.tar.gz -C "$dir" --strip 1
+  fi
+  chmod +x $dir/bin/*
+  echo "Installed yarn $(yarn --version)"
 }
 
-install_and_cache_npm_deps() {
+install_and_cache_yarn_deps() {
   info "Installing and caching node modules"
   cd $phoenix_dir
   if [ -d $cache_dir/node_modules ]; then
@@ -56,9 +68,7 @@ install_and_cache_npm_deps() {
     cp -r $cache_dir/node_modules/* node_modules/
   fi
 
-  npm install --quiet --unsafe-perm --userconfig $build_dir/npmrc 2>&1 | indent
-  npm rebuild 2>&1 | indent
-  npm --unsafe-perm prune 2>&1 | indent
+  yarn 2>&1
   cp -r node_modules $cache_dir
   PATH=$phoenix_dir/node_modules/.bin:$PATH
   install_bower_deps
@@ -84,6 +94,7 @@ compile() {
   cd $phoenix_dir
   PATH=$build_dir/.platform_tools/erlang/bin:$PATH
   PATH=$build_dir/.platform_tools/elixir/bin:$PATH
+  PATH=$build_dir/.heroku/yarn/bin:$PATH
 
   run_compile
 }
@@ -103,7 +114,6 @@ run_compile() {
 cache_versions() {
   info "Caching versions for future builds"
   echo `node --version` > $cache_dir/node-version
-  echo `npm --version` > $cache_dir/npm-version
 }
 
 write_profile() {

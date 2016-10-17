@@ -10,9 +10,9 @@ This buildpack is meant to be used with the [Heroku Buildpack for Elixir](https:
 * **Easy configuration** with `phoenix_static_buildpack.config` file
 * Automatically sets `DATABASE_URL`
 * If your app doesn't have a Procfile, default web task `mix phoenix.server` will be run
-* Can configure versions for Node and NPM
+* Can configure versions for Node
 * Auto-installs Bower deps if `bower.json` is in your app's root path
-* Caches Node, NPM modules and Bower components
+* Caches Node, yarn and Bower components
 
 ## Usage
 
@@ -39,9 +39,6 @@ phoenix_relative_path=.
 
 # We can set the version of Node to use for the app here
 node_version=5.3.0
-
-# We can set the version of NPM to use for the app here
-npm_version=2.10.1
 
 # Add the config vars you want to be exported here
 config_vars_to_export=(DATABASE_URL)
