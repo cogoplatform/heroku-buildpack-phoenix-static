@@ -17,34 +17,66 @@ This buildpack is meant to be used with the [Heroku Buildpack for Elixir](https:
 ## Usage
 
 ```bash
-# Set the buildpack for your Heroku app
-heroku buildpacks:set https://github.com/gjaldon/phoenix-static-buildpack
+# Create a Heroku instance for your project
+heroku apps:create my_heroku_app
 
-# Add this buildpack after the Elixir buildpack
-heroku buildpacks:add --index 1 https://github.com/HashNuke/heroku-buildpack-elixir
+# Set and add the buildpacks for your Heroku app
+heroku buildpacks:set https://github.com/HashNuke/heroku-buildpack-elixir
+heroku buildpacks:add https://github.com/gjaldon/heroku-buildpack-phoenix-static
+
+# Deploy
+git push heroku master
+```
+
+### Serve with Sass assets
+
+If your project serves Sass assets, you need the sass binary for `sass-brunch` via ruby buildpack.
+
+Create a `Gemfile` to include the `sass` gem:
+```
+source 'https://rubygems.org'
+ruby '2.3.1'
+gem 'sass'
+```
+
+Then run generate the `Gemfile.lock`:
+```bash
+bundle install
+```
+
+Finally, add the ruby buildpack.
+```bash
+# Add the ruby buildpack to your Heroku app
+heroku buildpacks:add https://github.com/heroku/heroku-buildpack-ruby
 ```
 
 ## Configuration
 
 Create a `phoenix_static_buildpack.config` file in your app's root dir if you want to override the defaults. The file's syntax is bash.
 
-If you don't specify a config option, then the default option from the buildpack's [`phoenix_static_buildpack.config`](https://github.com/gjaldon/phoenix-static-buildpack/blob/master/phoenix_static_buildpack.config) file will be used.
+If you don't specify a config option, then the default option from the buildpack's [`phoenix_static_buildpack.config`](https://github.com/gjaldon/heroku-buildpack-phoenix-static/blob/master/phoenix_static_buildpack.config) file will be used.
 
 
 __Here's a full config file with all available options:__
 
 ```bash
-# We can set the path to phoenix app. E.g. apps/phoenix_app when in umbrella.
-phoenix_relative_path=.
+# Clean out cache contents from previous deploys
+clean_cache=false
 
-# We can set the version of Node to use for the app here
-node_version=5.3.0
+# We can change the filename for the compile script with this option
+compile="compile"
 
 # Add the config vars you want to be exported here
 config_vars_to_export=(DATABASE_URL)
 
-# We can change the filename for the compile script with this option
-compile="compile"
+# We can set the version of Node to use for the app here
+node_version=5.3.0
+
+# We can set the version of NPM to use for the app here
+npm_version=2.10.1
+
+# We can set the path to phoenix app. E.g. apps/phoenix_app when in umbrella.
+phoenix_relative_path=.
 ```
 
 ## Compile
@@ -69,3 +101,13 @@ mix phoenix.digest
 ```
 
 The above `compile` overrides the default one. :)
+
+
+## FAQ
+
+1. When to use?
+- This buildpack is only necessary when you need to compile static assets during deploys. You will need not need this buildpack if you are using Phoenix only as a REST API.
+
+2. Do I need `heroku-buildpack-nodejs` with this?
+- No, this buildpack installs Node for you. How it differs from the NodeJS buildpack
+is that it adds `mix` to the PATH so you can run `mix` commands like `mix phoenix.digest`.

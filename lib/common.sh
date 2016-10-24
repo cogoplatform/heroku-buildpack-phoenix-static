@@ -4,11 +4,9 @@ info() {
 }
 
 indent() {
-  c='s/^/       /'
-  case $(uname) in
-    Darwin) sed -l "$c";; # mac/bsd sed: -l buffers on line boundaries
-    *)      sed -u "$c";; # unix/gnu sed: -u unbuffered (arbitrary) chunks of data
-  esac
+  while read LINE; do
+    echo "       $LINE" || true
+  done
 }
 
 head() {
@@ -59,10 +57,12 @@ export_config_vars() {
 }
 
 export_mix_env() {
-  if [ -d $env_dir ] && [ -f $env_dir/MIX_ENV ]; then
-    export MIX_ENV=$(cat $env_dir/MIX_ENV)
-  else
-    export MIX_ENV=prod
+  if [ -z "${MIX_ENV}" ]; then
+    if [ -d $env_dir ] && [ -f $env_dir/MIX_ENV ]; then
+      export MIX_ENV=$(cat $env_dir/MIX_ENV)
+    else
+      export MIX_ENV=prod
+    fi
   fi
 
   info "* MIX_ENV=${MIX_ENV}"

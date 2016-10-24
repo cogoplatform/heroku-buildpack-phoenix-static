@@ -1,21 +1,41 @@
+cleanup_cache() {
+  if [ $clean_cache = true ]; then
+    info "clean_cache option set to true."
+    info "Cleaning out cache contents"
+    rm -rf $cache_dir/npm-version
+    rm -rf $cache_dir/node-version
+    cleanup_old_node
+  fi
+}
+
+load_previous_npm_node_versions() {
+  if [ -f $cache_dir/npm-version ]; then
+    old_npm=$(<$cache_dir/npm-version)
+  fi
+  if [ -f $cache_dir/npm-version ]; then
+    old_node=$(<$cache_dir/node-version)
+  fi
+}
+
 download_node() {
   local node_url="http://s3pository.heroku.com/node/v$node_version/node-v$node_version-linux-x64.tar.gz"
 
   if [ ! -f ${cached_node} ]; then
     info "Downloading node ${node_version}..."
     curl -s ${node_url} -o ${cached_node}
-    cleanup_old_node
   else
     info "Using cached node ${node_version}..."
   fi
 }
 
 cleanup_old_node() {
-  local old_node_dir=$cache_dir/node-v$old_node-linux-x64.tar.gz
+  local old_node_dir=$cache_dir/node-$old_node-linux-x64.tar.gz
 
+  # Note that $old_node will have a format of "v5.5.0" while $node_version
+  # has the format "5.6.0"
 
-  if [ "$old_node" != "$node_version" ] && [ -f $old_node_dir ]; then
-    info "Cleaning up old node and old dependencies in cache"
+  if [ $clean_cache = true ] || [ $old_node != v$node_version ] && [ -f $old_node_dir ]; then
+    info "Cleaning up old Node $old_node and old dependencies in cache"
     rm $old_node_dir
     rm -rf $cache_dir/node_modules
 
@@ -28,14 +48,22 @@ cleanup_old_node() {
 }
 
 install_node() {
-  info "Installing node $node_version..."
+  info "Installing Node $node_version..."
   tar xzf ${cached_node} -C /tmp
+  local node_dir=$heroku_dir/node
 
-  # Move node into .heroku/node and make them executable
-  mv /tmp/node-v$node_version-linux-x64/* $heroku_dir/node
-  chmod +x $heroku_dir/node/bin/*
-  PATH=$heroku_dir/node/bin:$PATH
-  PATH=$heroku_dir/yarn/bin:$PATH
+  if [ -d $node_dir ]; then
+    echo " !     Error while installing Node $node_version."
+    echo "       Please remove any prior buildpack that installs Node."
+    exit 1
+  else
+    mkdir -p $node_dir
+    # Move node (and npm) into .heroku/node and make them executable
+    mv /tmp/node-v$node_version-linux-x64/* $node_dir
+    chmod +x $node_dir/bin/*
+    PATH=$node_dir/bin:$PATH
+    PATH=$heroku_dir/yarn/bin:$PATH
+  fi
 }
 
 install_yarn() {
@@ -69,8 +97,8 @@ install_and_cache_yarn_deps() {
   fi
 
   yarn 2>&1
-  cp -r node_modules $cache_dir
   PATH=$frontend_dir/node_modules/.bin:$PATH
+  cp -r node_modules $cache_dir
   install_bower_deps
 }
 
