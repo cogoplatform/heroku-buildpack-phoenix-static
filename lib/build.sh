@@ -92,6 +92,7 @@ install_and_cache_yarn_deps() {
   info "Installing and caching node modules"
   cd $frontend_dir
   if [ -d $cache_dir/node_modules ]; then
+    info "found cache node_modules... copying..."
     mkdir -p node_modules
     cp -r $cache_dir/node_modules/* node_modules/
   fi
