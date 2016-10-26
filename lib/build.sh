@@ -94,9 +94,9 @@ install_and_cache_yarn_deps() {
   if [ -d $cache_dir/node_modules ]; then
     info "found cache node_modules... copying..."
     mkdir -p node_modules
-    ls -l $cache_dir/node_modules/* 2>&1
-    cp -r $cache_dir/node_modules/* node_modules/ 2>&1
-    ls -l node_modules/* 2>&1
+    ls -l $cache_dir/node_modules | head 2>&1
+    cp -r $cache_dir/node_modules/* node_modules/
+    ls -l node_modules | head 2>&1
     pwd 2>&1
   fi
 
