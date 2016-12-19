@@ -93,30 +93,14 @@ install_and_cache_yarn_deps() {
   cd $frontend_dir
   if [ -d $cache_dir/node_modules ]; then
     info "found cache node_modules... copying..."
-    cp -r $cache_dir/node_modules .
+    mkdir -p node_modules
+    cp -r $cache_dir/node_modules/* node_modules/
   fi
-
-  yarn 2>&1
+  yarn install --pure-lockfile 2>&1
   PATH=$frontend_dir/node_modules/.bin:$PATH
   cp -r node_modules $cache_dir
-  install_bower_deps
 }
 
-install_bower_deps() {
-  cd $phoenix_dir
-  local bower_json=bower.json
-
-  if [ -f $bower_json ]; then
-    info "Installing and caching bower components"
-
-    if [ -d $cache_dir/bower_components ]; then
-      mkdir -p bower_components
-      cp -r $cache_dir/bower_components/* bower_components/
-    fi
-    bower install
-    cp -r bower_components $cache_dir
-  fi
-}
 
 compile() {
   cd $phoenix_dir
