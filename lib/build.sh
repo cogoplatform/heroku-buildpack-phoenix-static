@@ -94,11 +94,11 @@ install_and_cache_yarn_deps() {
   if [ -d $cache_dir/node_modules ]; then
     info "found cache node_modules... copying..."
     mkdir -p node_modules
-    cp -r $cache_dir/node_modules/* node_modules/
+    cp -r $cache_dir/node_modules/ $frontend_dir/node_modules/
   fi
   yarn install --pure-lockfile 2>&1
   PATH=$frontend_dir/node_modules/.bin:$PATH
-  cp -r node_modules $cache_dir
+  cp -r node_modules/ $cache_dir/node_modules/
 }
 
 
