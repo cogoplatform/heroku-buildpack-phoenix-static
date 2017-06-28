@@ -98,6 +98,7 @@ install_and_cache_yarn_deps() {
   fi
   yarn install --pure-lockfile 2>&1
   PATH=$frontend_dir/node_modules/.bin:$PATH
+  rm -rf $cache_dir/node_modules/
   cp -r $frontend_dir/node_modules/ $cache_dir/node_modules/
 }
 
