@@ -46,3 +46,4 @@ compile
 head "Finalizing build"
 cache_versions
 write_profile
+delete_node_modules

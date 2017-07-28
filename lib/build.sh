@@ -137,3 +137,9 @@ write_profile() {
                      export MIX_ENV=${MIX_ENV}"
   echo $export_line >> $build_dir/.profile.d/phoenix_static_buildpack_paths.sh
 }
+
+delete_node_modules() {
+  cd $frontend_dir
+  rm -rf node_modules
+}
+
